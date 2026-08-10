@@ -2052,8 +2052,8 @@ INDEX_HTML = r"""<!doctype html>
             <div>
               <label>模型入口</label>
               <select id="provider">
-                <option value="openai">OpenAI API</option>
-                <option value="anthropic">Anthropic API</option>
+                <option value="openai">GPT / OpenAI API</option>
+                <option value="anthropic">Claude / Anthropic API</option>
                 <option value="openai-compatible">OpenAI-compatible</option>
                 <option value="deepseek">DeepSeek API</option>
                 <option value="kimi">Kimi K3 API</option>
@@ -2068,6 +2068,7 @@ INDEX_HTML = r"""<!doctype html>
                 <option value="kimi-k3">Kimi K3</option>
                 <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
                 <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
+                <option value="gpt-4.1">GPT-4.1</option>
                 <option value="gpt-5.4">Sub2API GPT</option>
                 <option value="claude-3-5-sonnet-latest">Claude Sonnet</option>
               </datalist>
@@ -2998,6 +2999,14 @@ document.getElementById("provider").addEventListener("change", () => {
   const provider = document.getElementById("provider").value;
   const base = document.getElementById("baseUrl");
   const model = document.getElementById("model");
+  if (provider === "openai") {
+    base.value = "https://api.openai.com";
+    model.value = "gpt-4.1";
+  }
+  if (provider === "anthropic") {
+    base.value = "https://api.anthropic.com";
+    model.value = "claude-3-5-sonnet-latest";
+  }
   if (provider === "sub2api") {
     base.value = "https://sub2api.aifakapro.com";
     model.value = "gpt-5.4";
