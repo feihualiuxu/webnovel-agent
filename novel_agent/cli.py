@@ -20,6 +20,7 @@ CONFIG_ROOT = APP_ROOT / "config"
 PROJECTS_ROOT = APP_ROOT / "projects"
 SUPPORTED_SOURCE_EXTS = {".txt", ".md", ".markdown"}
 PLACEHOLDER = "状态：待生成"
+MODEL_PROVIDERS = ["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "kimi", "mock"]
 
 SOURCE_BACKBONE_CLONE_RULE = """
 源书主干复刻改名版硬规则：
@@ -1594,7 +1595,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--title", default="", help="小说暂定名")
     p.add_argument("--target-chapters", type=int, default=0, help="可选参考章数；最终终章由全书大纲按体量和节奏决定")
     p.add_argument("--batch-size", type=int, default=0, help="每个确认批次写几章；默认 30 章")
-    p.add_argument("--provider", default="openai", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="openai", choices=MODEL_PROVIDERS)
     p.add_argument("--engine", default="langgraph", choices=["langgraph", "builtin"], help="默认使用 GitHub 工具 LangGraph；未安装时可用 builtin")
     p.add_argument("--model", default="", help="模型名；不填则用环境变量或默认值")
     p.add_argument("--api-key", default="", help="API key；建议用环境变量而不是命令行明文")
@@ -1624,7 +1625,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("revise", help="按当前节点的微调要求自动修改设定/正文文件")
     p.add_argument("--project", required=True)
     p.add_argument("--note", required=True, help="微调要求")
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
     p.add_argument("--api-keys-file", default="")
@@ -1640,7 +1641,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--project", required=True)
     p.add_argument("--start", type=int, default=1)
     p.add_argument("--end", type=int, default=150)
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
     p.add_argument("--api-keys-file", default="")
@@ -1655,7 +1656,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--project", required=True)
     p.add_argument("--start", type=int, default=1)
     p.add_argument("--end", type=int, default=3)
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
     p.add_argument("--api-keys-file", default="")
@@ -1676,7 +1677,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("continue-outline", help="只继续补逐章章纲到指定章节，不要求一次生成全书")
     p.add_argument("--project", required=True)
     p.add_argument("--until", type=int, required=True, help="章纲连续补到第几章")
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
     p.add_argument("--api-keys-file", default="")
@@ -1691,7 +1692,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("reset-rebuild", help="归档当前产物，重新读取源书并从头生成拆解与设定包")
     p.add_argument("--project", required=True)
     p.add_argument("--source-dir", default="", help="不填则使用项目配置里的源书目录")
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--engine", default="langgraph", choices=["langgraph", "builtin"])
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
@@ -1738,7 +1739,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=command_agent_status)
 
     p = sub.add_parser("test-llm", help="测试模型接口连通性")
-    p.add_argument("--provider", default="sub2api", choices=["openai", "anthropic", "openai-compatible", "sub2api", "deepseek", "mock"])
+    p.add_argument("--provider", default="sub2api", choices=MODEL_PROVIDERS)
     p.add_argument("--model", default="")
     p.add_argument("--api-key", default="")
     p.add_argument("--api-keys-file", default="")

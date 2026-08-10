@@ -54,6 +54,11 @@ PROVIDERS = {
         "url": "https://platform.deepseek.com/",
         "note": "DeepSeek 官方 API 控制台。当前 Agent 通过 OpenAI-compatible 协议调用 deepseek-v4-pro / deepseek-v4-flash。",
     },
+    "kimi": {
+        "name": "Kimi API",
+        "url": "https://platform.moonshot.cn/",
+        "note": "Moonshot Kimi 官方 API 控制台。当前 Agent 默认通过 OpenAI-compatible 协议调用 kimi-k3。",
+    },
 }
 
 
@@ -131,6 +136,8 @@ def key_env_for_provider(provider: str, data: dict[str, Any]) -> dict[str, str]:
         return {"ANTHROPIC_API_KEYS": joined, "ANTHROPIC_API_KEY": first}
     if provider == "deepseek":
         return {"DEEPSEEK_API_KEYS": joined, "DEEPSEEK_API_KEY": first}
+    if provider == "kimi":
+        return {"KIMI_API_KEYS": joined, "KIMI_API_KEY": first}
     return {
         "OPENAI_COMPATIBLE_API_KEYS": joined,
         "OPENAI_COMPATIBLE_API_KEY": first,
@@ -146,7 +153,7 @@ def key_file_for_provider(provider: str, data: dict[str, Any]) -> Path | None:
         return path
     if provider == "sub2api":
         return latest_key_pool_file()
-    if provider == "deepseek":
+    if provider in {"deepseek", "kimi"}:
         return provider_key_file(provider)
     return None
 
@@ -2002,6 +2009,7 @@ INDEX_HTML = r"""<!doctype html>
           <button onclick="openProvider('manus')">Manus</button>
           <button onclick="openProvider('sub2api')">Sub2API</button>
           <button onclick="openProvider('deepseek')">DeepSeek</button>
+          <button onclick="openProvider('kimi')">Kimi</button>
         </div>
         <div class="hint">登录在官方网页完成，本地控制台不接触你的账号密码。</div>
       </div>
@@ -2048,14 +2056,16 @@ INDEX_HTML = r"""<!doctype html>
                 <option value="anthropic">Anthropic API</option>
                 <option value="openai-compatible">OpenAI-compatible</option>
                 <option value="deepseek">DeepSeek API</option>
+                <option value="kimi">Kimi K3 API</option>
                 <option value="sub2api" selected>Sub2API / GPT Plus 聚合</option>
                 <option value="mock">Mock 测试</option>
               </select>
             </div>
             <div>
               <label>模型名</label>
-              <input id="model" value="gpt-5.4" list="modelPresets" placeholder="deepseek-v4-pro / deepseek-v4-flash / gpt-5.4 / 本地模型名" />
+              <input id="model" value="gpt-5.4" list="modelPresets" placeholder="kimi-k3 / deepseek-v4-pro / gpt-5.4 / 本地模型名" />
               <datalist id="modelPresets">
+                <option value="kimi-k3">Kimi K3</option>
                 <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
                 <option value="deepseek-v4-flash">DeepSeek V4 Flash</option>
                 <option value="gpt-5.4">Sub2API GPT</option>
@@ -2995,6 +3005,10 @@ document.getElementById("provider").addEventListener("change", () => {
   if (provider === "deepseek") {
     base.value = "https://api.deepseek.com";
     model.value = "deepseek-v4-pro";
+  }
+  if (provider === "kimi") {
+    base.value = "https://api.moonshot.cn/v1";
+    model.value = "kimi-k3";
   }
   loadLocalKeyPool({silent: true});
 });

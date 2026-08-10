@@ -73,6 +73,15 @@ def mask_key(key: str) -> str:
     return f"{key[:6]}...{key[-4:]}"
 
 
+def openai_compatible_url(base_url: str, path: str) -> str:
+    """Build an OpenAI-compatible v1 URL without duplicating the /v1 prefix."""
+    base = base_url.rstrip("/")
+    suffix = path.lstrip("/")
+    if base.endswith("/v1"):
+        return f"{base}/{suffix}"
+    return f"{base}/v1/{suffix}"
+
+
 @dataclass
 class LLMConfig:
     provider: str
@@ -142,6 +151,13 @@ class LLMClient:
             base_url = (base_url or os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")).rstrip("/")
             if not api_key:
                 raise LLMError("Missing DEEPSEEK_API_KEY or DEEPSEEK_API_KEYS.")
+        elif provider == "kimi":
+            model = model or os.environ.get("KIMI_MODEL", "kimi-k3")
+            key_pool = collect_api_keys(api_keys, api_key, os.environ.get("KIMI_API_KEYS", ""), os.environ.get("KIMI_API_KEY", ""))
+            api_key = key_pool[0] if key_pool else ""
+            base_url = (base_url or os.environ.get("KIMI_BASE_URL", "https://api.moonshot.cn/v1")).rstrip("/")
+            if not api_key:
+                raise LLMError("Missing KIMI_API_KEY or KIMI_API_KEYS.")
         elif provider in {"openai-compatible", "sub2api"}:
             model = model or os.environ.get("OPENAI_COMPATIBLE_MODEL", "qwen2.5-72b-instruct")
             env_key_values: list[str] = [
@@ -182,7 +198,7 @@ class LLMClient:
                 break
             for attempt in range(self.config.retries + 1):
                 try:
-                    if self.config.provider in {"openai", "openai-compatible", "sub2api", "deepseek"}:
+                    if self.config.provider in {"openai", "openai-compatible", "sub2api", "deepseek", "kimi"}:
                         return self._openai_chat(prompt, system, max_tokens, temperature, stream_callback=stream_callback)
                     if self.config.provider == "anthropic":
                         return self._anthropic_messages(prompt, system, max_tokens, temperature)
@@ -320,7 +336,7 @@ class LLMClient:
         if httpx is not None:
             try:
                 response = httpx.get(
-                    f"{self.config.base_url}/v1/models",
+                    openai_compatible_url(self.config.base_url, "models"),
                     headers=headers,
                     timeout=min(self.config.timeout, 30),
                     trust_env=False,
@@ -331,7 +347,7 @@ class LLMClient:
         if requests is not None:
             try:
                 response = requests.get(
-                    f"{self.config.base_url}/v1/models",
+                    openai_compatible_url(self.config.base_url, "models"),
                     headers=headers,
                     timeout=min(self.config.timeout, 30),
                 )
@@ -339,7 +355,7 @@ class LLMClient:
             except Exception:
                 return False
         request = urllib.request.Request(
-            f"{self.config.base_url}/v1/models",
+            openai_compatible_url(self.config.base_url, "models"),
             headers=headers,
             method="GET",
         )
@@ -367,17 +383,23 @@ class LLMClient:
         body = {
             "model": self.config.model,
             "messages": messages,
-            "temperature": temperature,
         }
+        if self.config.provider != "kimi":
+            body["temperature"] = temperature
         if max_tokens and max_tokens > 0:
-            body["max_tokens"] = max_tokens
+            if self.config.provider == "kimi":
+                body["max_completion_tokens"] = max_tokens
+            else:
+                body["max_tokens"] = max_tokens
+        if self.config.provider == "kimi":
+            body["reasoning_effort"] = os.environ.get("KIMI_REASONING_EFFORT", "low")
         headers = {"Content-Type": "application/json"}
         if self._active_api_key:
             headers["Authorization"] = f"Bearer {self._active_api_key}"
         if stream_callback:
             body["stream"] = True
-            return self._post_openai_stream(f"{self.config.base_url}/v1/chat/completions", headers, body, stream_callback)
-        data = self._post_json(f"{self.config.base_url}/v1/chat/completions", headers, body)
+            return self._post_openai_stream(openai_compatible_url(self.config.base_url, "chat/completions"), headers, body, stream_callback)
+        data = self._post_json(openai_compatible_url(self.config.base_url, "chat/completions"), headers, body)
         try:
             return data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
