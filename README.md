@@ -17,6 +17,27 @@
 
 说明：GPT Plus / Claude Pro / Manus Pro 订阅不等于 API key。
 
+## 支持的模型 API
+
+图形控制台支持直接选择 GPT、Claude、Kimi 和 DeepSeek。运行 `gui.bat` 后，在“模型入口”中选择供应商，填写 API Key，再点击“测试模型”即可。
+
+| 控制台选项 | Provider | 默认模型 | 默认 Base URL | Key 环境变量 |
+| --- | --- | --- | --- | --- |
+| GPT / OpenAI API | `openai` | `gpt-4.1` | `https://api.openai.com` | `OPENAI_API_KEY` / `OPENAI_API_KEYS` |
+| Claude / Anthropic API | `anthropic` | `claude-3-5-sonnet-latest` | `https://api.anthropic.com` | `ANTHROPIC_API_KEY` / `ANTHROPIC_API_KEYS` |
+| Kimi K3 API | `kimi` | `kimi-k3` | `https://api.moonshot.cn/v1` | `KIMI_API_KEY` / `KIMI_API_KEYS` |
+| DeepSeek API | `deepseek` | `deepseek-v4-pro` | `https://api.deepseek.com` | `DEEPSEEK_API_KEY` / `DEEPSEEK_API_KEYS` |
+
+使用步骤：
+
+1. 启动 `gui.bat`，进入 `http://127.0.0.1:8765`。
+2. 在“模型入口”选择 GPT、Claude、Kimi 或 DeepSeek。
+3. 确认自动带出的模型名和 Base URL；也可以改成账号实际可用的模型 ID。
+4. 在“API Key 池”填入 Key；多个 Key 一行一个，失败、限额或额度耗尽时会自动轮换。
+5. 点击“测试模型”，成功后再启动或继续自动写作。
+
+控制台不会把 Key 写入小说项目配置。运行时 Key 文件只保存在本地 `secrets/` 目录，该目录已被 Git 忽略，不会进入仓库。
+
 ## GitHub 工具
 
 我选用 LangGraph 作为可选自动编排引擎。它在 GitHub README 中明确主打 durable execution、human-in-the-loop 和 memory，正好适合长篇写作这种需要长时间运行、断点恢复、人工节点确认的工作流。
