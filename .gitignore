@@ -1,0 +1,38 @@
+# Secrets and local configuration
+.env
+.env.*
+secrets/
+*.local.json
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Novel materials and generated content
+books/
+projects/
+sucai/
+training_data/
+models/
+saves/
+exports/
+logs/
+run/
+_backups/
+tmp_*
+
+# Tool caches and packaged artifacts
+.playwright-cli/
+tools/patina-node/node_modules/
+*.zip
+*.tar
+*.tar.gz
+
+# Editor and operating system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
